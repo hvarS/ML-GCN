@@ -78,7 +78,7 @@ class Engine(object):
 
         # record loss
         self.state['loss_batch'] = self.state['loss'].data
-        self.state['meter_loss'].add(self.state['loss_batch'])
+        self.state['meter_loss'].add(self.state['loss_batch'].cpu())
 
         if display and self.state['print_freq'] != 0 and self.state['iteration'] % self.state['print_freq'] == 0:
             loss = self.state['meter_loss'].value()[0]
