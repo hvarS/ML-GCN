@@ -277,7 +277,9 @@ class Engine(object):
             if self.state['use_gpu']:
                 self.state['target'] = self.state['target'].cuda(non_blocking=True)
 
-            self.on_forward(False, model, criterion, data_loader)
+            with torch.no_grad():
+
+                self.on_forward(False, model, criterion, data_loader)
 
             # measure elapsed time
             self.state['batch_time_current'] = time.time() - end
