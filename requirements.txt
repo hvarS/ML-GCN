@@ -1,6 +1,5 @@
 tqdm==4.61.1
 torchnet==0.0.4
-torch==1.9.1
 numpy==1.19.5
 torchvision==0.10.1
 Pillow==8.4.0
