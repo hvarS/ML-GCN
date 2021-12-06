@@ -3,7 +3,7 @@ from engine import *
 from models.models_224 import *
 from voc import *
 import optuna 
-from optuna import TrialState
+from optuna.trial import TrialState
 
 parser = argparse.ArgumentParser(description='WILDCAT Training')
 parser.add_argument('data', metavar='DIR',
