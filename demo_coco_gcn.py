@@ -1,6 +1,6 @@
 import argparse
 from engine import *
-from models import *
+from models.models import *
 from coco import *
 from util import *
 

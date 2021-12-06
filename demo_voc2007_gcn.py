@@ -1,6 +1,6 @@
 import argparse
 from engine import *
-from models import *
+from models.models import *
 from voc import *
 
 parser = argparse.ArgumentParser(description='WILDCAT Training')
