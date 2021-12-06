@@ -421,7 +421,7 @@ class GCNMultiLabelMAPEngine(MultiLabelMAPEngine):
         if training:
             optimizer.zero_grad()
             self.state['loss'].backward()
-            nn.utils.clip_grad_norm(model.parameters(), max_norm=10.0)
+            nn.utils.clip_grad_norm_(model.parameters(), max_norm=10.0)
             optimizer.step()
 
 
