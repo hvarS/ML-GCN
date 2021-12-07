@@ -107,10 +107,6 @@ class Engine(object):
         input_var = torch.autograd.Variable(self.state['input'])
         target_var = torch.autograd.Variable(self.state['target'])
 
-        if not training:
-            input_var.volatile = True
-            target_var.volatile = True
-
         # compute output
         self.state['output'] = model(input_var)
         self.state['loss'] = criterion(self.state['output'], target_var)
@@ -411,10 +407,7 @@ class GCNMultiLabelMAPEngine(MultiLabelMAPEngine):
         feature_var = torch.autograd.Variable(self.state['feature']).float()
         target_var = torch.autograd.Variable(self.state['target']).float()
         inp_var = torch.autograd.Variable(self.state['input']).float().detach()  # one hot
-        if not training:
-            feature_var.volatile = True
-            target_var.volatile = True
-            inp_var.volatile = True
+        
 
         # compute output
         self.state['output'] = model(feature_var, inp_var)
