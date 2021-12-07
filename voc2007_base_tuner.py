@@ -1,6 +1,6 @@
 import argparse
 from engine import *
-from models.models_224 import *
+from models.attention import *
 from voc import *
 import optuna 
 from optuna.trial import TrialState
