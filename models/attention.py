@@ -64,7 +64,7 @@ class GCNResnet(nn.Module):
         )
 
         # self.pooling = nn.MaxPool2d(14, 14)
-        self.pool = nn.MaxPool2d(14,14)
+        self.pool = nn.MaxPool2d(7,7)
         self.cov_channel = 2048
 
         self.gc1 = GraphConvolution(in_channel, 1024)
