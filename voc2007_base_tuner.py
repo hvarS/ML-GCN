@@ -20,7 +20,7 @@ parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
 parser.add_argument('-b', '--batch-size', default=16, type=int,
                     metavar='N', help='mini-batch size (default: 256)')
-parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
+parser.add_argument('--lr', '--learning-rate', default=0.02207089093258345, type=float,
                     metavar='LR', help='initial learning rate')
 parser.add_argument('--lrp', '--learning-rate-pretrained', default=0.1, type=float,
                     metavar='LR', help='learning rate for pre-trained layers')
@@ -39,7 +39,6 @@ parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
 def objective(trial):
     global args, best_prec1, use_gpu
     args = parser.parse_args()
-    args.lr = trial.suggest_float('lr',1e-6,1e-1,log = True)
     
     use_gpu = torch.cuda.is_available()
 
@@ -49,8 +48,9 @@ def objective(trial):
 
     num_classes = 20
 
+    t = trial.suggest_categorical('Threshold ',[0.3,0.4,0.5,0.6,0.7])
     # load model
-    model = gcn_resnet101(num_classes=num_classes, t=0.4, adj_file='data/voc/voc_adj.pkl')
+    model = gcn_resnet101(num_classes=num_classes, t=t, adj_file='data/voc/voc_adj.pkl')
 
     # define loss function (criterion)
     criterion = nn.MultiLabelSoftMarginLoss()
@@ -76,7 +76,7 @@ def objective(trial):
 
 
 if __name__ == '__main__':
-    study = optuna.create_study(direction="maximize",study_name="Learning Rate Identifier")
+    study = optuna.create_study(direction="maximize",study_name="Threshold Identification Summary")
     study.optimize(objective, n_trials=10)
 
     pruned_trials = study.get_trials(deepcopy=False, states=[TrialState.PRUNED])
