@@ -1,6 +1,7 @@
 import argparse
 from engine import *
 from models.attention import *
+from models.attention_224 import *
 from voc import *
 import optuna 
 from optuna.trial import TrialState
@@ -50,8 +51,10 @@ def objective(trial):
 
     t = trial.suggest_categorical('Threshold ',[0.3,0.4,0.5,0.6,0.7])
     # load model
-    model = gcn_resnet101(num_classes=num_classes, t=t, adj_file='data/voc/voc_adj.pkl')
-
+    if args.image_size==448:
+        model = attention_gcn(num_classes=num_classes, t=t, adj_file='data/voc/voc_adj.pkl')
+    else:
+        model = attention_gcn_224(num_classes=num_classes, t=t, adj_file='data/voc/voc_adj.pkl')
     # define loss function (criterion)
     criterion = nn.MultiLabelSoftMarginLoss()
     # define optimizer

@@ -1,6 +1,6 @@
 import argparse
 from engine import *
-from models.models_224 import *
+from models.attention import *
 from voc import *
 
 parser = argparse.ArgumentParser(description='WILDCAT Training')
@@ -47,7 +47,7 @@ def main_voc2007():
     num_classes = 20
 
     # load model
-    model = gcn_resnet101(num_classes=num_classes, t=0.4, adj_file='data/voc/voc_adj.pkl')
+    model = attention_gcn(num_classes=num_classes, t=0.7, adj_file='data/voc/voc_adj.pkl')
 
     # define loss function (criterion)
     criterion = nn.MultiLabelSoftMarginLoss()
