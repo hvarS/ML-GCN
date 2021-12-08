@@ -49,7 +49,7 @@ def objective(trial):
 
     num_classes = 20
 
-    args.lr = trial.suggest_loguniform('lr',8e-3,1e-1)
+    args.lr = trial.suggest_loguniform('lr',8e-3,4e-2)
     # load model
     if args.image_size==448:
         model = attention_gcn(num_classes=num_classes, t=0.5, adj_file=args.data+'/voc_adj.pkl')
