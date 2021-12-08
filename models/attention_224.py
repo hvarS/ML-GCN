@@ -64,7 +64,7 @@ class GCNResnet(nn.Module):
         )
 
         # self.pooling = nn.MaxPool2d(14, 14)
-        self.pool = nn.MaxPool2d(14,14)
+        self.pool = nn.MaxPool2d(7,7)
         self.cov_channel = 2048
 
         self.gc1 = GraphConvolution(in_channel, 1024)
@@ -134,6 +134,6 @@ class GCNResnet(nn.Module):
 
 
 
-def attention_gcn(num_classes, t, pretrained=True, adj_file=None, in_channel=300):
+def attention_gcn_224(num_classes, t, pretrained=True, adj_file=None, in_channel=300):
     model = models.resnet101(pretrained=pretrained)
     return GCNResnet(model, num_classes, t=t, adj_file=adj_file, in_channel=in_channel)
