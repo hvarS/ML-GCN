@@ -49,7 +49,7 @@ def objective(trial):
 
     num_classes = 20
 
-    args.lr = trial.suggest_loguniform('lr',8e-3,4e-2)
+    args.lr = trial.suggest_loguniform('lr',9e-3,3e-2)
     # load model
     if args.image_size==448:
         model = attention_gcn(num_classes=num_classes, t=0.5, adj_file=args.data+'/voc_adj.pkl')
@@ -58,14 +58,10 @@ def objective(trial):
     # define loss function (criterion)
     criterion = nn.MultiLabelSoftMarginLoss()
     # define optimizer
-    optimizer_name = trial.suggest_categorical("optimizer", ["Adam", "RMSprop", "SGD"])
-    if optimizer_name != "SGD":
-        optimizer = getattr(torch.optim, optimizer_name)(model.get_config_optim(args.lr, args.lrp), lr=args.lr)
-    else:
-        optimizer = torch.optim.SGD(model.get_config_optim(args.lr, args.lrp),
-                                lr=args.lr,
-                                momentum=args.momentum,
-                                weight_decay=args.weight_decay)
+    optimizer = torch.optim.SGD(model.get_config_optim(args.lr, args.lrp),
+                            lr=args.lr,
+                            momentum=args.momentum,
+                            weight_decay=args.weight_decay)
 
     state = {'batch_size': args.batch_size, 'image_size': args.image_size, 'max_epochs': args.epochs,
              'evaluate': args.evaluate, 'resume': args.resume, 'num_classes':num_classes}
