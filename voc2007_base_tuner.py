@@ -44,21 +44,25 @@ def objective(trial):
     use_gpu = torch.cuda.is_available()
 
     # define dataset
-    train_dataset = Voc2007Classification(args.data, 'trainval', inp_name='data/voc/voc_glove_word2vec.pkl')
-    val_dataset = Voc2007Classification(args.data, 'test', inp_name='data/voc/voc_glove_word2vec.pkl')
+    train_dataset = Voc2007Classification(args.data, 'trainval', inp_name=args.data+'/voc_glove_word2vec.pkl')
+    val_dataset = Voc2007Classification(args.data, 'test', inp_name=args.data+'/voc_glove_word2vec.pkl')
 
     num_classes = 20
 
-    t = trial.suggest_categorical('Threshold ',[0.3,0.4,0.5,0.6,0.7])
+    args.lr = trial.suggest_loguniform('lr',8e-3,1e-1)
     # load model
     if args.image_size==448:
-        model = attention_gcn(num_classes=num_classes, t=t, adj_file='data/voc/voc_adj.pkl')
+        model = attention_gcn(num_classes=num_classes, t=0.5, adj_file=args.data+'/voc_adj.pkl')
     else:
-        model = attention_gcn_224(num_classes=num_classes, t=t, adj_file='data/voc/voc_adj.pkl')
+        model = attention_gcn_224(num_classes=num_classes, t=0.5, adj_file=args.data+'/voc_adj.pkl')
     # define loss function (criterion)
     criterion = nn.MultiLabelSoftMarginLoss()
     # define optimizer
-    optimizer = torch.optim.SGD(model.get_config_optim(args.lr, args.lrp),
+    optimizer_name = trial.suggest_categorical("optimizer", ["Adam", "RMSprop", "SGD"])
+    if optimizer_name != "SGD":
+        optimizer = getattr(torch.optim, optimizer_name)(model.get_config_optim(args.lr, args.lrp), lr=args.lr)
+    else:
+        optimizer = torch.optim.SGD(model.get_config_optim(args.lr, args.lrp),
                                 lr=args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
@@ -73,14 +77,15 @@ def objective(trial):
     
     if args.evaluate:
         state['evaluate'] = True
+
     engine = GCNMultiLabelMAPEngine(state)
-    return engine.learning(model, criterion, train_dataset, val_dataset, optimizer)
+    return engine.learning(model, criterion, train_dataset, val_dataset, optimizer,trial)
 
 
 
 if __name__ == '__main__':
-    study = optuna.create_study(direction="maximize",study_name="Threshold Identification Summary")
-    study.optimize(objective, n_trials=5)
+    study = optuna.create_study(direction="maximize",study_name="Optimizer and lr Hypertuning")
+    study.optimize(objective, n_trials=15)
 
     pruned_trials = study.get_trials(deepcopy=False, states=[TrialState.PRUNED])
     complete_trials = study.get_trials(deepcopy=False, states=[TrialState.COMPLETE])
@@ -99,3 +104,12 @@ if __name__ == '__main__':
     print("  Params: ")
     for key, value in trial.params.items():
         print("    {}: {}".format(key, value))
+
+
+    if not os.path.exists("visualisations_for_hyperparameters"):
+        os.mkdir("visualisations_for_hyperparameters")
+    
+    images_dir = os.path.join(os.getcwd(),"visualisations_for_hyperparameters")
+    fig = optuna.visualization.plot_param_importances(study)
+    fig.write(os.path.join(images_dir)+'attention_tuning_448.png')
+

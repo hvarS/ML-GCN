@@ -37,17 +37,17 @@ parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
 def main_voc2007():
     global args, best_prec1, use_gpu
     args = parser.parse_args()
-
+    
     use_gpu = torch.cuda.is_available()
 
     # define dataset
-    train_dataset = Voc2007Classification(args.data, 'trainval', inp_name='data/voc/voc_glove_word2vec.pkl')
-    val_dataset = Voc2007Classification(args.data, 'test', inp_name='data/voc/voc_glove_word2vec.pkl')
+    train_dataset = Voc2007Classification(args.data, 'trainval', inp_name=args.data+'/voc_glove_word2vec.pkl')
+    val_dataset = Voc2007Classification(args.data, 'test', inp_name=args.data+'/voc_glove_word2vec.pkl')
 
     num_classes = 20
 
     # load model
-    model = attention_gcn(num_classes=num_classes, t=0.7, adj_file='data/voc/voc_adj.pkl')
+    model = attention_gcn(num_classes=num_classes, t=0.5, adj_file=args.data +'/voc_adj.pkl')
 
     # define loss function (criterion)
     criterion = nn.MultiLabelSoftMarginLoss()

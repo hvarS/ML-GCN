@@ -9,6 +9,7 @@ import torchnet as tnt
 import torchvision.transforms as transforms
 import torch.nn as nn
 from util import *
+import optuna
 
 tqdm.monitor_interval = 0
 class Engine(object):
@@ -139,7 +140,7 @@ class Engine(object):
 
         self.state['best_score'] = 0
 
-    def learning(self, model, criterion, train_dataset, val_dataset, optimizer=None):
+    def learning(self, model, criterion, train_dataset, val_dataset, optimizer=None,trial = None):
 
         self.init_learning(model, criterion)
 
@@ -208,7 +209,11 @@ class Engine(object):
                 'state_dict': model.module.state_dict() if self.state['use_gpu'] else model.state_dict(),
                 'best_score': self.state['best_score'],
             }, is_best)
-
+            if trial is not None:
+                trial.report(prec1,epoch)
+                        # Handle pruning based on the intermediate value.
+                if trial.should_prune():
+                    raise optuna.exceptions.TrialPruned()
             print(' *** best={best:.3f}'.format(best=self.state['best_score']))
         return self.state['best_score']
 
