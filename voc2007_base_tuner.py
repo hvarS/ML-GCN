@@ -13,7 +13,7 @@ parser.add_argument('--image-size', '-i', default=224, type=int,
                     metavar='N', help='image size (default: 224)')
 parser.add_argument('-j', '--workers', default=0, type=int, metavar='N',
                     help='number of data loading workers (default: 0)')
-parser.add_argument('--epochs', default=20, type=int, metavar='N',
+parser.add_argument('--epochs', default=0, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--epoch_step', default=[30], type=int, nargs='+',
                     help='number of epochs to change learning rate')
@@ -49,15 +49,12 @@ def objective(trial):
 
     num_classes = 20
 
-    args.lr = trial.suggest_loguniform('lr',9e-3,3e-2)
-    t = trial.suggest_categorical('threshold',[0.3,0.4,0.5,0.6,0.7])
-    args.momentum = trial.suggest_categorical('momentum',[0.88,0.89,0.9,0.91,0.92])
-    args.lrp = trial.suggest_categorical('pretrained lr',[0.1,0.2,0.3,0.09,0.08,0.05])
+    args.lrp = trial.suggest_float('learning rate pretrained ',8e-2,8e-1,log = True)
     # load model
     if args.image_size==448:
-        model = attention_gcn(num_classes=num_classes, t=t, adj_file=args.data+'/voc_adj.pkl')
+        model = attention_gcn(num_classes=num_classes, t=0.6, adj_file=args.data+'/voc_adj.pkl')
     else:
-        model = attention_gcn_224(num_classes=num_classes, t=t, adj_file=args.data+'/voc_adj.pkl')
+        model = attention_gcn_224(num_classes=num_classes, t=0.6, adj_file=args.data+'/voc_adj.pkl')
     # define loss function (criterion)
     criterion = nn.MultiLabelSoftMarginLoss()
     # define optimizer
@@ -83,7 +80,7 @@ def objective(trial):
 
 
 if __name__ == '__main__':
-    study = optuna.create_study(direction="maximize",study_name="Optimizer and lr Hypertuning")
+    study = optuna.create_study(direction="maximize",study_name="lrp hypertuning")
     study.optimize(objective, n_trials=20)
 
     pruned_trials = study.get_trials(deepcopy=False, states=[TrialState.PRUNED])
@@ -110,5 +107,5 @@ if __name__ == '__main__':
     
     images_dir = os.path.join(os.getcwd(),"visualisations_for_hyperparameters")
     fig = optuna.visualization.plot_param_importances(study)
-    fig.write(os.path.join(images_dir)+'attention_tuning_448.png')
+    fig.show()
 
