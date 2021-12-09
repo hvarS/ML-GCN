@@ -6,9 +6,9 @@ from voc import *
 parser = argparse.ArgumentParser(description='WILDCAT Training')
 parser.add_argument('data', metavar='DIR',
                     help='path to dataset (e.g. data/')
-parser.add_argument('--image-size', '-i', default=224, type=int,
-                    metavar='N', help='image size (default: 224)')
-parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
+parser.add_argument('--image-size', '-i', default=448, type=int,
+                    metavar='N', help='image size (default: 448)')
+parser.add_argument('-j', '--workers', default=0, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('--epochs', default=20, type=int, metavar='N',
                     help='number of total epochs to run')
@@ -47,7 +47,7 @@ def main_voc2007():
     num_classes = 20
 
     # load model
-    model = attention_gcn(num_classes=num_classes, t=0.5, adj_file=args.data +'/voc_adj.pkl')
+    model = attention_gcn(num_classes=num_classes, t=0.3, adj_file=args.data +'/voc_adj.pkl')
 
     # define loss function (criterion)
     criterion = nn.MultiLabelSoftMarginLoss()
