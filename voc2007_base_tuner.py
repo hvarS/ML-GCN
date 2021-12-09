@@ -52,7 +52,7 @@ def objective(trial):
     args.lr = trial.suggest_loguniform('lr',9e-3,3e-2)
     t = trial.suggest_categorical('threshold',[0.3,0.4,0.5,0.6,0.7])
     args.momentum = trial.suggest_categorical('momentum',[0.88,0.89,0.9,0.91,0.92])
-    args.lrp = trial.suggest_categorical('pretrained lr':[0.1,0.2,0.3,0.09,0.08,0.05])
+    args.lrp = trial.suggest_categorical('pretrained lr',[0.1,0.2,0.3,0.09,0.08,0.05])
     # load model
     if args.image_size==448:
         model = attention_gcn(num_classes=num_classes, t=t, adj_file=args.data+'/voc_adj.pkl')
