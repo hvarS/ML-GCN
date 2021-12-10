@@ -120,14 +120,14 @@ class GCNResnet(nn.Module):
         inp = inp[0]
         adj = gen_adj(self.A).detach()
 
-        x = self.dropout(inp)
+        #x = self.dropout(inp)
         x = self.gc1(x, adj)
         x = self.norm1(x)
-        x = self.dropout(x)
+        #x = self.dropout(x)
         x = self.relu(x)
         x = self.gc2(x, adj)
         x = self.norm2(x)
-        x = self.dropout(x)
+        #x = self.dropout(x)
         x = self.relu(x)
         x = self.gc3(x,adj)
 
