@@ -1,7 +1,10 @@
 import argparse
+
+from optuna import samplers
 from engine import *
 from models.attention_pair_norm import *
 from models.attention_224 import *
+from optuna.samplers import NSGAIISampler
 from voc import *
 import optuna 
 from optuna.trial import TrialState
@@ -79,7 +82,8 @@ def objective(trial):
 
 
 if __name__ == '__main__':
-    study = optuna.create_study(direction="maximize",study_name="lrp hypertuning for pairnorm")
+    sampler = NSGAIISampler()
+    study = optuna.create_study(direction="maximize",study_name="lrp hypertuning for pairnorm",sampler = sampler)
     study.optimize(objective, n_trials=5)
 
     pruned_trials = study.get_trials(deepcopy=False, states=[TrialState.PRUNED])
