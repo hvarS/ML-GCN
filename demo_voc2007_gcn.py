@@ -1,6 +1,6 @@
 import argparse
 from engine import *
-from models.attention import *
+from models.attention_pair_norm import *
 from voc import *
 
 parser = argparse.ArgumentParser(description='WILDCAT Training')

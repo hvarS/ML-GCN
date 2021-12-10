@@ -6,3 +6,5 @@ Image Size : 448
 Attention : lr: 0.02207089093258345 t = 0.5 , lrp = learning rate pretrained : 0.4494673690021932  epochs = 15 93.304
  {'lr': 0.018968947288933533, 'threshold': 0.6, 'momentum': 0.9, 'pretrained lr': 0.3}
  {'lr': 0.012627670424024236, 'threshold': 0.3 ,'momentum': 0.9, 'pretrained lr':0.3}
+
+Attentive Pair-Norm : lr : 0.14557483000867255
