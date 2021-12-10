@@ -1,6 +1,6 @@
 import argparse
 from engine import *
-from models.attention import *
+from models.attention_pair_norm import *
 from models.attention_224 import *
 from voc import *
 import optuna 
@@ -48,8 +48,8 @@ def objective(trial):
     val_dataset = Voc2007Classification(args.data, 'test', inp_name=args.data+'/voc_glove_word2vec.pkl')
 
     num_classes = 20
-
-    args.lrp = trial.suggest_float('learning rate pretrained ',8e-2,8e-1,log = True)
+    args.lrp = 0.310
+    args.lr = trial.suggest_float('learning rate pretrained ',1e-1,3e-1,log = True)
     # load model
     if args.image_size==448:
         model = attention_gcn(num_classes=num_classes, t=0.6, adj_file=args.data+'/voc_adj.pkl')
@@ -80,8 +80,8 @@ def objective(trial):
 
 
 if __name__ == '__main__':
-    study = optuna.create_study(direction="maximize",study_name="lrp hypertuning")
-    study.optimize(objective, n_trials=20)
+    study = optuna.create_study(direction="maximize",study_name="lrp hypertuning for pairnorm")
+    study.optimize(objective, n_trials=5)
 
     pruned_trials = study.get_trials(deepcopy=False, states=[TrialState.PRUNED])
     complete_trials = study.get_trials(deepcopy=False, states=[TrialState.COMPLETE])
