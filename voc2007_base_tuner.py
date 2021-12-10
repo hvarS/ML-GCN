@@ -87,7 +87,7 @@ if __name__ == '__main__':
 
     sampler = TPESampler(seed = 42)
     study = optuna.create_study(direction="maximize",study_name="Find most important hyperparameters",sampler = sampler)
-    study.optimize(objective, n_trials=50)
+    study.optimize(objective, n_trials=40)
 
     pruned_trials = study.get_trials(deepcopy=False, states=[TrialState.PRUNED])
     complete_trials = study.get_trials(deepcopy=False, states=[TrialState.COMPLETE])
