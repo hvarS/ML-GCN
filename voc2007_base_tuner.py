@@ -48,7 +48,6 @@ def objective(trial):
     val_dataset = Voc2007Classification(args.data, 'test', inp_name=args.data+'/voc_glove_word2vec.pkl')
 
     num_classes = 20
-    args.lrp = 0.310
     args.lr = trial.suggest_float('learning rate pretrained ',1e-1,3e-1,log = True)
     # load model
     if args.image_size==448:
