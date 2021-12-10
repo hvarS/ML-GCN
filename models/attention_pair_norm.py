@@ -120,7 +120,8 @@ class GCNResnet(nn.Module):
         inp = inp[0]
         adj = gen_adj(self.A).detach()
 
-        #x = self.dropout(inp)
+        x = inp
+        #x = self.dropout(x)
         x = self.gc1(inp, adj)
         x = self.norm1(x)
         #x = self.dropout(x)
@@ -146,6 +147,6 @@ class GCNResnet(nn.Module):
 
 
 
-def attention_gcn(num_classes, t, pretrained=True, adj_file=None, in_channel=300):
+def attention_gcn_pairnorm(num_classes, t, pretrained=True, adj_file=None, in_channel=300):
     model = models.resnet101(pretrained=pretrained)
     return GCNResnet(model, num_classes, t=t, adj_file=adj_file, in_channel=in_channel)

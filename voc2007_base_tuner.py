@@ -1,10 +1,8 @@
 import argparse
 
-from optuna import samplers
 from engine import *
 from models.attention_pair_norm import *
-from models.attention_224 import *
-from optuna.samplers import NSGAIISampler
+from optuna.samplers import TPESampler
 from voc import *
 import optuna 
 from optuna.trial import TrialState
@@ -51,12 +49,16 @@ def objective(trial):
     val_dataset = Voc2007Classification(args.data, 'test', inp_name=args.data+'/voc_glove_word2vec.pkl')
 
     num_classes = 20
-    args.lr = trial.suggest_float('learning rate pretrained ',1e-1,3e-1,log = True)
+    
+    args.lr = trial.suggest_float('learning rate ',1e-2,3e-1,log = True)
+    args.lrp = trial.suggest_float('lrp',5e-2,5e-1,log=True)
+    t = trial.suggest_categorical('Threshold',[0.2,0.3,0.4,0.5,0.6,0.7,0.8])
+    args.weight_decay = trial.suggest_float('weight decay',5e-5,5e-4,log = True)
     # load model
     if args.image_size==448:
-        model = attention_gcn(num_classes=num_classes, t=0.6, adj_file=args.data+'/voc_adj.pkl')
+        model = attention_gcn_pairnorm(num_classes=num_classes, t=t, adj_file=args.data+'/voc_adj.pkl')
     else:
-        model = attention_gcn_224(num_classes=num_classes, t=0.6, adj_file=args.data+'/voc_adj.pkl')
+        model = attention_gcn_pairnorm(num_classes=num_classes, t=t, adj_file=args.data+'/voc_adj.pkl')
     # define loss function (criterion)
     criterion = nn.MultiLabelSoftMarginLoss()
     # define optimizer
@@ -82,9 +84,10 @@ def objective(trial):
 
 
 if __name__ == '__main__':
-    sampler = NSGAIISampler()
-    study = optuna.create_study(direction="maximize",study_name="lrp hypertuning for pairnorm",sampler = sampler)
-    study.optimize(objective, n_trials=5)
+
+    sampler = TPESampler(seed = 42)
+    study = optuna.create_study(direction="maximize",study_name="Find most important hyperparameters",sampler = sampler)
+    study.optimize(objective, n_trials=30)
 
     pruned_trials = study.get_trials(deepcopy=False, states=[TrialState.PRUNED])
     complete_trials = study.get_trials(deepcopy=False, states=[TrialState.COMPLETE])
@@ -104,11 +107,10 @@ if __name__ == '__main__':
     for key, value in trial.params.items():
         print("    {}: {}".format(key, value))
 
-
-    if not os.path.exists("visualisations_for_hyperparameters"):
-        os.mkdir("visualisations_for_hyperparameters")
-    
-    images_dir = os.path.join(os.getcwd(),"visualisations_for_hyperparameters")
-    fig = optuna.visualization.plot_param_importances(study)
-    fig.show()
+    importance_dict = optuna.importance.get_param_importances(study)
+    print(importance_dict)
+    mdi_importance = optuna.importance.MeanDecreaseImpurityImportanceEvaluator.evaluate(study = study)
+    print(mdi_importance)
+    fanova_importance = optuna.importance.FanovaImportanceEvaluator.evaluate(study = study)
+    print(fanova_importance)
 
