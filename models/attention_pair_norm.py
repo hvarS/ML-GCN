@@ -69,10 +69,11 @@ class GCNResnet(nn.Module):
         self.cov_channel = 2048
 
         self.dropout = nn.Dropout()
-        self.gc1 = GraphConvolution(in_channel, 1024)
-        self.norm = PairNorm()
-        self.gc2 = GraphConvolution(1024, 2048)
-
+        self.gc1 = GraphConvolution(in_channel, 512)
+        self.norm1 = PairNorm()
+        self.gc2 = GraphConvolution(512, 1024)
+        self.norm2 = PairNorm()
+        self.gc3 = GraphConvolution(1024, 2048)
         self.relu = nn.LeakyReLU(0.2)
         self.cov = nn.Conv2d(2048, self.parts, 1)
         self.fc = nn.Linear(2048*self.parts, 2048, False)
@@ -121,10 +122,14 @@ class GCNResnet(nn.Module):
 
         x = self.dropout(inp)
         x = self.gc1(x, adj)
-        x = self.norm(x)
+        x = self.norm1(x)
         x = self.dropout(x)
         x = self.relu(x)
         x = self.gc2(x, adj)
+        x = self.norm2(x)
+        x = self.dropout(x)
+        x = self.relu(x)
+        x = self.gc3(x,adj)
 
         x = x.transpose(0, 1)
         x = torch.matmul(feature, x)
