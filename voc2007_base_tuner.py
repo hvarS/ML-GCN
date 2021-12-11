@@ -51,9 +51,9 @@ def objective(trial):
     num_classes = 20
     
     args.lr = trial.suggest_float('learning rate ',9e-3,3e-1,log = True)
-    args.lrp = trial.suggest_float('lrp',5e-2,5e-1,log=True)
+    args.lrp = trial.suggest_float('lrp',8e-2,5e-1,log=True)
     t = trial.suggest_categorical('Threshold',[0.2,0.3,0.4,0.5,0.6,0.7,0.8])
-    args.weight_decay = trial.suggest_float('weight decay',5e-5,5e-4,log = True)
+    args.weight_decay = trial.suggest_float('weight decay',7e-5,3e-4,log = True)
     # load model
     if args.image_size==448:
         model = attention_gcn_pairnorm(num_classes=num_classes, t=t, adj_file=args.data+'/voc_adj.pkl')
@@ -87,7 +87,7 @@ if __name__ == '__main__':
 
     sampler = TPESampler(seed = 42)
     study = optuna.create_study(direction="maximize",study_name="Find most important hyperparameters",sampler = sampler)
-    study.optimize(objective, n_trials=40)
+    study.optimize(objective, n_trials=10)
 
     pruned_trials = study.get_trials(deepcopy=False, states=[TrialState.PRUNED])
     complete_trials = study.get_trials(deepcopy=False, states=[TrialState.COMPLETE])
