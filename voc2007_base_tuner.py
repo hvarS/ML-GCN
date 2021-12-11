@@ -109,8 +109,10 @@ if __name__ == '__main__':
 
     importance_dict = optuna.importance.get_param_importances(study)
     print(importance_dict)
-    mdi_importance = optuna.importance.MeanDecreaseImpurityImportanceEvaluator.evaluate(study = study)
+    mdi = optuna.importance.MeanDecreaseImpurityImportanceEvaluator()
+    mdi_importance = mdi.evaluate(study = study)
     print(mdi_importance)
-    fanova_importance = optuna.importance.FanovaImportanceEvaluator.evaluate(study = study)
+    fanova =  optuna.importance.FanovaImportanceEvaluator()
+    fanova_importance = fanova.evaluate(study = study)
     print(fanova_importance)
 
