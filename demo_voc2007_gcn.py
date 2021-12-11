@@ -8,6 +8,8 @@ parser.add_argument('data', metavar='DIR',
                     help='path to dataset (e.g. data/')
 parser.add_argument('--image-size', '-i', default=448, type=int,
                     metavar='N', help='image size (default: 448)')
+parser.add_argument('--t', default=0.5, type=float,
+                    metavar='T', help='threshold value (default: 0.5)')
 parser.add_argument('-j', '--workers', default=0, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('--epochs', default=20, type=int, metavar='N',
@@ -47,7 +49,7 @@ def main_voc2007():
     num_classes = 20
 
     # load model
-    model = attention_gcn(num_classes=num_classes, t=0.3, adj_file=args.data +'/voc_adj.pkl')
+    model = attention_gcn_pairnorm(num_classes=num_classes, t=args.t, adj_file=args.data +'/voc_adj.pkl')
 
     # define loss function (criterion)
     criterion = nn.MultiLabelSoftMarginLoss()
