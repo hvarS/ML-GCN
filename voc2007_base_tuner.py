@@ -1,7 +1,7 @@
 import argparse
 
 from engine import *
-from models.attention_pair_norm import *
+from models.attention_pair_norm_3layer import *
 from optuna.samplers import TPESampler
 from voc import *
 import optuna 
