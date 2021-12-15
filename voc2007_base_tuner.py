@@ -1,7 +1,7 @@
 import argparse
 
 from engine import *
-from models.attention_pair_norm_3layer import *
+from models.attention_pair_norm_2layer import *
 from optuna.samplers import TPESampler
 from voc import *
 import optuna 
@@ -51,7 +51,6 @@ def objective(trial):
     num_classes = 20
     
     args.lr = trial.suggest_float('learning rate ',9e-3,3e-1,log = True)
-    args.lrp = trial.suggest_float('lrp',8e-2,5e-1,log=True)
     t = trial.suggest_categorical('Threshold',[0.2,0.3,0.4,0.5,0.6,0.7,0.8])
     args.weight_decay = trial.suggest_float('weight decay',7e-5,3e-4,log = True)
     # load model
@@ -87,7 +86,7 @@ if __name__ == '__main__':
 
     sampler = TPESampler(seed = 42)
     study = optuna.create_study(direction="maximize",study_name="Find most important hyperparameters",sampler = sampler)
-    study.optimize(objective, n_trials=10)
+    study.optimize(objective, n_trials=20)
 
     pruned_trials = study.get_trials(deepcopy=False, states=[TrialState.PRUNED])
     complete_trials = study.get_trials(deepcopy=False, states=[TrialState.COMPLETE])
