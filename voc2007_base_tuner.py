@@ -55,7 +55,7 @@ def objective(trial):
     args.weight_decay = trial.suggest_float('weight decay',7e-5,3e-4,log = True)
     # load model
     if args.image_size==448:
-        model = attention_gcn_pairnorm(num_classes=num_classes, t=t, adj_file=args.data+'/voc_adj.pkl')
+        model = attention_gcn_pairnorm(num_classes=num_classes, t=t, adj_file=args.data+'/voc_adj.pkl',trial = trial)
     else:
         model = attention_gcn_pairnorm(num_classes=num_classes, t=t, adj_file=args.data+'/voc_adj.pkl')
     # define loss function (criterion)

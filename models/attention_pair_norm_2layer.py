@@ -48,7 +48,7 @@ class GraphConvolution(nn.Module):
 
 
 class GCNResnet(nn.Module):
-    def __init__(self, model, num_classes, in_channel=300, t=0, adj_file=None):
+    def __init__(self, model, num_classes, in_channel=300, t=0, adj_file=None,trial=None):
         super(GCNResnet, self).__init__()
         self.parts= 10   # the number of regions
         self.map_threshold = 0.5  #the alpha threshold
@@ -68,10 +68,12 @@ class GCNResnet(nn.Module):
         self.pool = nn.MaxPool2d(14,14)
         self.cov_channel = 2048
 
+        imd = trial.suggest_categorical('Intermediete Value Layer ',[256,512,1024,2048])
+
         self.dropout = nn.Dropout()
-        self.gc1 = GraphConvolution(in_channel, 512)
+        self.gc1 = GraphConvolution(in_channel, imd)
         self.norm1 = PairNorm()
-        self.gc2 = GraphConvolution(512, 2048)
+        self.gc2 = GraphConvolution(imd, 2048)
         self.relu = nn.LeakyReLU(0.2)
         self.cov = nn.Conv2d(2048, self.parts, 1)
         self.fc = nn.Linear(2048*self.parts, 2048, False)
@@ -122,8 +124,8 @@ class GCNResnet(nn.Module):
         #x = self.dropout(x)
         x = self.gc1(inp, adj)
         x = self.norm1(x)
-        x = self.relu(x)
         x = self.dropout(x)
+        x = self.relu(x)
         x = self.gc2(x, adj)
 
         x = x.transpose(0, 1)
@@ -141,6 +143,6 @@ class GCNResnet(nn.Module):
 
 
 
-def attention_gcn_pairnorm(num_classes, t, pretrained=True, adj_file=None, in_channel=300):
+def attention_gcn_pairnorm(num_classes, t, pretrained=True, adj_file=None, in_channel=300,trial = None):
     model = models.resnet101(pretrained=pretrained)
-    return GCNResnet(model, num_classes, t=t, adj_file=adj_file, in_channel=in_channel)
+    return GCNResnet(model, num_classes, t=t, adj_file=adj_file, in_channel=in_channel,trial = trial)
