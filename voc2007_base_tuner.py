@@ -52,7 +52,7 @@ def objective(trial):
     
     args.lr = trial.suggest_float('learning rate ',9e-3,3e-1,log = True)
     t = trial.suggest_categorical('Threshold',[0.2,0.3,0.4,0.5,0.6,0.7,0.8])
-    args.weight_decay = trial.suggest_float('weight decay',7e-5,3e-4,log = True)
+    #args.weight_decay = trial.suggest_float('weight decay',7e-5,3e-4,log = True)
     # load model
     if args.image_size==448:
         model = attention_gcn_pairnorm(num_classes=num_classes, t=t, adj_file=args.data+'/voc_adj.pkl',trial = trial)

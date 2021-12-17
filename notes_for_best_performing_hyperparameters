@@ -11,7 +11,7 @@ Attention :
 Attentive Pair-Norm : lr : 0.14557483000867255
 
 
-Attention + PairNorm ( 3 layer)
+1. Attention + PairNorm ( 3 layer)
 Best trial:
   Value:  89.46548461914062
   Params: 
@@ -19,3 +19,16 @@ Best trial:
     lrp: 0.16350041938011056
     Threshold: 0.6
     weight decay: 5.743438246130018e-05
+
+2. Attention + PairNorm ( 2 layer)
+Study statistics: 
+  Number of finished trials:  10
+  Number of pruned trials:  5
+  Number of complete trials:  5
+Best trial:
+  Value:  93.24728393554688
+  Params: 
+    learning rate : 0.018950000592501983
+    Threshold: 0.8
+    weight decay: 8.575538444903963e-05
+    Intermediete Value Layer : 2048
