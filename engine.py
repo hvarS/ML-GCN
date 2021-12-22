@@ -10,6 +10,7 @@ import torchvision.transforms as transforms
 import torch.nn as nn
 from util import *
 import optuna
+from ray import tune
 
 tqdm.monitor_interval = 0
 class Engine(object):
@@ -203,12 +204,20 @@ class Engine(object):
             # remember best prec@1 and save checkpoint
             is_best = prec1 > self.state['best_score']
             self.state['best_score'] = max(prec1, self.state['best_score'])
-            self.save_checkpoint({
-                'epoch': epoch + 1,
-                'arch': self._state('arch'),
-                'state_dict': model.module.state_dict() if self.state['use_gpu'] else model.state_dict(),
-                'best_score': self.state['best_score'],
-            }, is_best)
+            
+            #Save Checkpoint
+            with tune.checkpoint_dir(epoch) as checkpoint_dir:
+                path = os.path.join(checkpoint_dir, "checkpoint")
+                torch.save((model.state_dict(), optimizer.state_dict()), path)
+            
+            tune.report(loss=self.state['loss'], mAP=prec1)
+
+            #self.save_checkpoint({
+            #    'epoch': epoch + 1,
+            #    'arch': self._state('arch'),
+            #    'state_dict': model.module.state_dict() if self.state['use_gpu'] else model.state_dict(),
+            #    'best_score': self.state['best_score'],
+            #}, is_best)
             if trial is not None:
                 trial.report(prec1,epoch)
                         # Handle pruning based on the intermediate value.

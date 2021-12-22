@@ -1,6 +1,6 @@
 import argparse
 from engine import *
-from models.attention_pair_norm_3layer import *
+from models.attention_pair_norm_2layer import *
 from voc import *
 
 parser = argparse.ArgumentParser(description='WILDCAT Training')
@@ -51,14 +51,13 @@ def main_voc2007():
     # load model
     model = attention_gcn_pairnorm(num_classes=num_classes, t=args.t, adj_file=args.data +'/voc_adj.pkl')
 
+    if torch.cuda.is_available():
+        model = model.cuda()
+
     # define loss function (criterion)
     criterion = nn.MultiLabelSoftMarginLoss()
     # define optimizer
-    optimizer = torch.optim.SGD(model.get_config_optim(args.lr, args.lrp),
-                                lr=args.lr,
-                                momentum=args.momentum,
-                                weight_decay=args.weight_decay)
-
+    optimizer = torch.optim.Adagrad(model.parameters(),lr = 3e-4)
     state = {'batch_size': args.batch_size, 'image_size': args.image_size, 'max_epochs': args.epochs,
              'evaluate': args.evaluate, 'resume': args.resume, 'num_classes':num_classes}
     state['difficult_examples'] = True

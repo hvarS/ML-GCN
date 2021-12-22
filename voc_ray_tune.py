@@ -4,8 +4,10 @@ from engine import *
 from models.attention_pair_norm_2layer import *
 from optuna.samplers import TPESampler
 from voc import *
-import optuna 
-from optuna.trial import TrialState
+from functools import partial
+from ray import tune
+from ray.tune.schedulers import ASHAScheduler
+from ray.tune import CLIReporter
 
 parser = argparse.ArgumentParser(description='WILDCAT Training')
 parser.add_argument('data', metavar='DIR',
@@ -36,42 +38,44 @@ parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
+args = parser.parse_args()
 
-
-def objective(trial):
-    global args, best_prec1, use_gpu
-    args = parser.parse_args()
+def trainer(config,data_dir = None,checkpoint_dir = None):
+    global best_prec1, use_gpu
+    
     
     use_gpu = torch.cuda.is_available()
-
-    torchvision_transform = transforms.Compose([
-        transforms.Resize((256, 256)), 
-        transforms.RandomCrop(224),
-        transforms.RandomHorizontalFlip(),
-    ])
-
+    
 
     # define dataset
-    train_dataset = Voc2007Classification(args.data, 'trainval', inp_name=args.data+'/voc_glove_word2vec.pkl',transform=torchvision_transform)
-    val_dataset = Voc2007Classification(args.data, 'test', inp_name=args.data+'/voc_glove_word2vec.pkl')
+    train_dataset = Voc2007Classification(data_dir, 'trainval', inp_name=data_dir+'/voc_glove_word2vec.pkl')
+    val_dataset = Voc2007Classification(data_dir, 'test', inp_name=data_dir+'/voc_glove_word2vec.pkl')
 
     num_classes = 20
     
-    args.lr = trial.suggest_float('learning rate ',9e-3,3e-1,log = True)
-    t = trial.suggest_categorical('Threshold',[0.2,0.3,0.4,0.5,0.6,0.7,0.8])
-    #args.weight_decay = trial.suggest_float('weight decay',7e-5,3e-4,log = True)
     # load model
     if args.image_size==448:
-        model = attention_gcn_pairnorm(num_classes=num_classes, t=t, adj_file=args.data+'/voc_adj.pkl',trial = trial)
+        model = attention_gcn_pairnorm(num_classes=num_classes, t=config["threshold"], adj_file=args.data+'/voc_adj.pkl')
     else:
-        model = attention_gcn_pairnorm(num_classes=num_classes, t=t, adj_file=args.data+'/voc_adj.pkl')
+        model = attention_gcn_pairnorm(num_classes=num_classes, t=config["threshold"], adj_file=args.data+'/voc_adj.pkl')
+    device = "cpu"
+    if torch.cuda.is_available():
+        device = "cuda:0"
+    model = model.to(device)
+    
     # define loss function (criterion)
     criterion = nn.MultiLabelSoftMarginLoss()
     # define optimizer
-    optimizer = torch.optim.SGD(model.get_config_optim(args.lr, args.lrp),
-                            lr=args.lr,
-                            momentum=args.momentum,
-                            weight_decay=args.weight_decay)
+    optimizer = torch.optim.SGD(model.parameters(),
+                            lr=config["lr"],
+                            momentum=config["momentum"],
+                            weight_decay=args.wd)
+
+    if checkpoint_dir:
+        model_state, optimizer_state = torch.load(
+            os.path.join(checkpoint_dir, "checkpoint"))
+        model.load_state_dict(model_state)
+        optimizer.load_state_dict(optimizer_state)
 
     state = {'batch_size': args.batch_size, 'image_size': args.image_size, 'max_epochs': args.epochs,
              'evaluate': args.evaluate, 'resume': args.resume, 'num_classes':num_classes}
@@ -79,46 +83,54 @@ def objective(trial):
     state['save_model_path'] = 'checkpoint/voc2007/'
     state['workers'] = args.workers
     state['epoch_step'] = args.epoch_step
-    state['lr'] = args.lr
+    state['lr'] = config["lr"]
     
     if args.evaluate:
         state['evaluate'] = True
 
     engine = GCNMultiLabelMAPEngine(state)
-    return engine.learning(model, criterion, train_dataset, val_dataset, optimizer,trial)
+    mAP = engine.learning(model, criterion, train_dataset, val_dataset, optimizer)
+    tune.report(mAP=mAP)
 
 
 
 if __name__ == '__main__':
+    # for early stopping
+    scheduler = ASHAScheduler(
+        metric="mAP",
+        mode="max",
+        max_t=args.epochs,
+        grace_period=1,
+        reduction_factor=2)
+    reporter = CLIReporter(
+        # parameter_columns=["l1", "l2", "lr", "batch_size"],
+        metric_columns=["loss", "mAP"])
+    
+    config={
+            "lr": tune.loguniform(1e-4, 1e-2),
+            "momentum": tune.uniform(0.1, 0.9),
+            "threshold":tune.quniform(0.2,0.9,0.1),
+    }
+    print(os.getcwd())
+    analysis = tune.run(
+        run_or_experiment = partial(trainer,data_dir=args.data,checkpoint_dir="../RayTuneCheckpoints"),
+        num_samples=20,
+        name="mAP_Tuning",
+        scheduler=scheduler,
+        stop={
+            "mAP": 0.98,
+        },
+        resources_per_trial={
+            'cpu':1,
+            'gpu':1
+        },
+        config=config,
+        progress_reporter=reporter
+    )
 
-    sampler = TPESampler(seed = 42)
-    study = optuna.create_study(direction="maximize",study_name="Find most important hyperparameters",sampler = sampler)
-    study.optimize(objective, n_trials=20)
-
-    pruned_trials = study.get_trials(deepcopy=False, states=[TrialState.PRUNED])
-    complete_trials = study.get_trials(deepcopy=False, states=[TrialState.COMPLETE])
-
-    print("Study statistics: ")
-    print("  Number of finished trials: ", len(study.trials))
-    print("  Number of pruned trials: ", len(pruned_trials))
-    print("  Number of complete trials: ", len(complete_trials))
-
-
-    print("Best trial:")
-    trial = study.best_trial
-
-    print("  Value: ", trial.value)
-
-    print("  Params: ")
-    for key, value in trial.params.items():
-        print("    {}: {}".format(key, value))
-
-    importance_dict = optuna.importance.get_param_importances(study)
-    print(importance_dict)
-    mdi = optuna.importance.MeanDecreaseImpurityImportanceEvaluator()
-    mdi_importance = mdi.evaluate(study = study)
-    print(mdi_importance)
-    fanova =  optuna.importance.FanovaImportanceEvaluator()
-    fanova_importance = fanova.evaluate(study = study)
-    print(fanova_importance)
-
+    best_trial = analysis.get_best_trial("mAP", "max", "last")
+    print("Best trial config: {}".format(best_trial.config))
+    print("Best trial final validation loss: {}".format(
+        best_trial.last_result["loss"]))
+    print("Best trial final validation mAP score: {}".format(
+        best_trial.last_result["mAP"]))

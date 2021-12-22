@@ -68,8 +68,11 @@ class GCNResnet(nn.Module):
         self.pool = nn.MaxPool2d(14,14)
         self.cov_channel = 2048
 
-        imd = trial.suggest_categorical('Intermediete Value Layer ',[256,512,1024,2048,4096])
-
+        if trial is not None:
+            imd = trial.suggest_categorical('Intermediete Value Layer ',[256,512,1024,2048,4096])
+        else:
+            imd = 256
+            
         self.dropout = nn.Dropout()
         self.gc1 = GraphConvolution(in_channel, imd)
         self.norm1 = PairNorm()
